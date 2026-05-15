@@ -1,0 +1,115 @@
+:root {
+  /* Surfaces */
+  --surface-page:    #f8fafc;
+  --surface-panel:   #ffffff;
+  --surface-raised:  #f8fafc;
+  --surface-sunken:  #f1f5f9;
+  --surface-hover:   #f1f5f9;
+  --surface-active:  #eef2ff;
+
+  /* Text */
+  --text-strong:    #0f172a;
+  --text-primary:   #334155;
+  --text-secondary: #64748b;
+  --text-muted:     #94a3b8;
+  --text-on-accent: #ffffff;
+
+  /* Borders */
+  --border-strong: #e2e8f0;
+  --border-soft:   #f1f5f9;
+
+  /* Accent (indigo) */
+  --accent:           #6366f1;
+  --accent-strong:    #4338ca;
+  --accent-soft-bg:   rgba(99, 102, 241, 0.13);
+  --accent-active-bg: #eef2ff;
+  --accent-active-fg: #3730a3;
+
+  /* Tooltip */
+  --tooltip-bg:   #1e293b;
+  --tooltip-text: #f1f5f9;
+
+  /* Status */
+  --status-error: #dc2626;
+
+  /* Network graph */
+  --link-color: #6366f1;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'SF Mono', Consolas, monospace;
+
+  font: 16px/145% var(--sans);
+  color: var(--text-primary);
+  background: var(--surface-page);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --surface-page:    #0b1120;
+  --surface-panel:   #111827;
+  --surface-raised:  #1f2937;
+  --surface-sunken:  #1f2937;
+  --surface-hover:   #1f2937;
+  --surface-active:  #312e81;
+
+  --text-strong:    #f1f5f9;
+  --text-primary:   #cbd5e1;
+  --text-secondary: #94a3b8;
+  --text-muted:     #64748b;
+  --text-on-accent: #ffffff;
+
+  --border-strong: #1f2937;
+  --border-soft:   #1e293b;
+
+  --accent:           #818cf8;
+  --accent-strong:    #c7d2fe;
+  --accent-soft-bg:   rgba(129, 140, 248, 0.18);
+  --accent-active-bg: #1e1b4b;
+  --accent-active-fg: #c7d2fe;
+
+  --tooltip-bg:   #f1f5f9;
+  --tooltip-text: #0f172a;
+
+  --status-error: #f87171;
+
+  --link-color: #818cf8;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-page);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+h1, h2, h3 {
+  font-family: var(--heading);
+  color: var(--text-strong);
+}
+
+h1 {
+  font-weight: 600;
+  font-size: 28px;
+  letter-spacing: -0.5px;
+  margin: 24px 0 16px;
+}
+
+#app {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 1.25rem 2rem;
+}

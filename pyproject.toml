@@ -1,0 +1,20 @@
+[project]
+name = "omop-dp-phenotypes"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "streamlit>=1.35.0",
+    "duckdb>=1.0.0",
+    "pandas>=2.2.0",
+    "numpy>=2.0.0",
+    "plotly>=5.22.0",
+    "python-dotenv>=1.0.0",
+    "opendp>=0.14.2",
+    "ipykernel>=7.2.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0.0",
+    "pytest-mock>=3.14.0",
+]
