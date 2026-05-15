@@ -67,7 +67,7 @@
   .panel {
     display: flex;
     flex-direction: column;
-    width: 400px;
+    width: 100%;
     flex-shrink: 0;
     background: var(--surface-panel);
     border: 1px solid var(--border-strong);

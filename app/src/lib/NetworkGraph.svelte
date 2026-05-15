@@ -6,6 +6,7 @@
 
   let svgEl = $state()
   let simulation
+  let themeObserver
   let loading = $state(true)
   let error = $state('')
   let tooltip = $state({ visible: false, x: 0, y: 0, name: '', count: 0, concepts: 0, system: '' })
@@ -13,6 +14,10 @@
   let tableData = $state([])
   let sortBy = $state('count')
   let hoveredId = $state(null)
+  let tableWidth = $state(520)
+  let resizingTable = false
+  let resizeStartX = 0
+  let resizeStartWidth = 520
 
   // Set by drawGraph; called whenever hoveredId changes to sync D3 visuals
   let applySelection = (_id) => {}
@@ -23,11 +28,26 @@
     applySelection(hoveredId)
   })
 
-  const WIDTH = 900
-  const HEIGHT = 900
-  const MIN_RADIUS = 4
-  const MAX_RADIUS = 28
+  const WIDTH = 700
+  const HEIGHT = 700
+  const MIN_RADIUS = 2
+  const MAX_RADIUS = 12
   const MAX_NODES = 500
+  const TABLE_MIN_WIDTH = 420
+  const TABLE_MAX_WIDTH = 900
+
+  // Force layout tuning knobs (grouped for easier adjustment)
+  const NODE_HIGHLIGHT_SCALE = 1.6
+  const LINK_DISTANCE = 60
+  const LINK_STRENGTH = 0.8
+  const CHARGE_STRENGTH = -10
+  const CENTER_STRENGTH = 0.05
+  const COLLISION_PADDING = 3
+  const COLLISION_STRENGTH = 0.9
+  const HOVER_REPEL_RADIUS = 30
+  const HOVER_REPEL_STRENGTH = 10.0
+  const CLUSTER_STRENGTH = 0.2
+  const CLUSTER_REPEL_BASE = 5000
 
   // Color map keyed by system name — must match values produced by classify_system() in Python
   const SYSTEM_COLORS = {
@@ -51,6 +71,39 @@
 
   function systemColor(system) {
     return SYSTEM_COLORS[system] ?? SYSTEM_COLORS['Other']
+  }
+
+  function selectedFillColor() {
+    const theme = document.documentElement.getAttribute('data-theme')
+    return theme === 'dark' ? '#ffffff' : '#000000'
+  }
+
+  function clampTableWidth(value) {
+    return Math.max(TABLE_MIN_WIDTH, Math.min(TABLE_MAX_WIDTH, value))
+  }
+
+  function onTableResizeMove(event) {
+    if (!resizingTable) return
+    const delta = resizeStartX - event.clientX
+    tableWidth = clampTableWidth(resizeStartWidth + delta)
+  }
+
+  function stopTableResize() {
+    if (!resizingTable) return
+    resizingTable = false
+    window.removeEventListener('mousemove', onTableResizeMove)
+    window.removeEventListener('mouseup', stopTableResize)
+    document.body.classList.remove('col-resize-active')
+  }
+
+  function startTableResize(event) {
+    event.preventDefault()
+    resizingTable = true
+    resizeStartX = event.clientX
+    resizeStartWidth = tableWidth
+    window.addEventListener('mousemove', onTableResizeMove)
+    window.addEventListener('mouseup', stopTableResize)
+    document.body.classList.add('col-resize-active')
   }
 
   onMount(async () => {
@@ -115,13 +168,27 @@
       loading = false
       await tick()
       drawGraph(nodes, links)
+
+      // Keep selected node color in sync when the global theme changes.
+      themeObserver?.disconnect()
+      themeObserver = new MutationObserver(() => {
+        applySelection(hoveredId)
+      })
+      themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme'],
+      })
     } catch (e) {
       error = e instanceof Error ? e.message : 'Unknown error'
       loading = false
     }
   })
 
-  onDestroy(() => simulation?.stop())
+  onDestroy(() => {
+    simulation?.stop()
+    themeObserver?.disconnect()
+    stopTableResize()
+  })
 
   function drawGraph(nodes, links) {
     const countExtent = d3.extent(nodes, d => d.count)
@@ -158,7 +225,7 @@
       .on('mousemove', (event, d) => {
         d3.select(event.currentTarget)
           .transition().duration(50)
-          .attr('r', rScale(d.count) * 1.6)
+          .attr('r', rScale(d.count) * NODE_HIGHLIGHT_SCALE)
           .attr('stroke-width', 2)
         hoveredNode = d
         if (!event.active) simulation.alphaTarget(0.12).restart()
@@ -203,7 +270,8 @@
     applySelection = (sid) => {
       nodeEl
         .transition().duration(150)
-        .attr('r', d => d.id === sid ? rScale(d.count) * 1.6 : rScale(d.count))
+        .attr('r', d => d.id === sid ? rScale(d.count) * NODE_HIGHLIGHT_SCALE : rScale(d.count))
+        .attr('fill', d => d.id === sid ? selectedFillColor() : d.color)
         .attr('stroke', d => d.id === sid
           ? d3.color(d.color).brighter(0.5)
           : d3.color(d.color).darker(0.8))
@@ -213,9 +281,6 @@
     }
 
     let hoveredNode = null
-    const HOVER_REPEL_RADIUS = 30
-    const HOVER_REPEL_STRENGTH = 10.0
-
     function forceHoverRepel(alpha) {
       if (!hoveredNode) return
       const hx = hoveredNode.x, hy = hoveredNode.y
@@ -233,7 +298,6 @@
     }
 
     // Pull each node toward its system's live centroid — O(n) per tick
-    const CLUSTER_STRENGTH = 0.08
     function forceCluster(alpha) {
       // Pass 1: compute centroid per system
       const centroids = new Map()
@@ -260,7 +324,7 @@
           const dx = ca.x - cb.x
           const dy = ca.y - cb.y
           const dist = Math.sqrt(dx * dx + dy * dy) || 1
-          const repel = (3500 / (dist * dist)) * alpha
+          const repel = (CLUSTER_REPEL_BASE / (dist * dist)) * alpha
           for (const node of nodes) {
             if (node.system === sysA) { node.vx += (dx / dist) * repel; node.vy += (dy / dist) * repel }
             else if (node.system === sysB) { node.vx -= (dx / dist) * repel; node.vy -= (dy / dist) * repel }
@@ -270,11 +334,11 @@
     }
 
     simulation = d3.forceSimulation(nodes)
-      .force('link', d3.forceLink(links).id(d => d.id).distance(60).strength(0.5))
-      .force('charge', d3.forceManyBody().strength(-20))
-      .force('x', d3.forceX(WIDTH / 2).strength(0.05))
-      .force('y', d3.forceY(HEIGHT / 2).strength(0.05))
-      .force('collision', d3.forceCollide().radius(d => (d.id === hoveredId ? rScale(d.count) * 1.6 : rScale(d.count)) + 3).strength(0.9))
+      .force('link', d3.forceLink(links).id(d => d.id).distance(LINK_DISTANCE).strength(LINK_STRENGTH))
+      .force('charge', d3.forceManyBody().strength(CHARGE_STRENGTH))
+      .force('x', d3.forceX(WIDTH / 2).strength(CENTER_STRENGTH))
+      .force('y', d3.forceY(HEIGHT / 2).strength(CENTER_STRENGTH))
+      .force('collision', d3.forceCollide().radius(d => (d.id === hoveredId ? rScale(d.count) * NODE_HIGHLIGHT_SCALE : rScale(d.count)) + COLLISION_PADDING).strength(COLLISION_STRENGTH))
       .force('cluster', forceCluster)
       .force('hoverRepel', forceHoverRepel)
       .on('tick', () => {
@@ -325,7 +389,16 @@
         </div>
       </div>
 
-      <PhenotypeTable data={tableData} bind:hoveredId bind:sortBy height={HEIGHT} />
+      <button
+        type="button"
+        class="table-resizer"
+        aria-label="Resize table"
+        onmousedown={startTableResize}
+      ></button>
+
+      <div class="table-col" style="width:{tableWidth}px">
+        <PhenotypeTable data={tableData} bind:hoveredId bind:sortBy height={HEIGHT} />
+      </div>
     </div>
 
     <CohortDefinition
@@ -345,7 +418,7 @@
   .main-layout {
     display: flex;
     align-items: flex-start;
-    gap: 1.25rem;
+    gap: 0.6rem;
   }
 
   .graph-col {
@@ -356,6 +429,47 @@
     border-radius: 10px;
     padding: 1rem;
     box-shadow: var(--shadow-sm);
+  }
+
+  .table-col {
+    width: 520px;
+    flex-shrink: 0;
+  }
+
+  .table-resizer {
+    width: 12px;
+    margin: 0 0.15rem;
+    border: 0;
+    padding: 0;
+    border-radius: 999px;
+    cursor: col-resize;
+    align-self: stretch;
+    background: transparent;
+    position: relative;
+  }
+
+  .table-resizer::before {
+    content: '';
+    position: absolute;
+    top: 1rem;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    border-radius: 999px;
+    background: var(--border-strong);
+    opacity: 0.65;
+    transition: opacity 0.15s, background-color 0.15s;
+  }
+
+  .table-resizer:hover::before {
+    opacity: 1;
+    background: var(--accent);
+  }
+
+  :global(body.col-resize-active) {
+    cursor: col-resize;
+    user-select: none;
   }
 
   .container {

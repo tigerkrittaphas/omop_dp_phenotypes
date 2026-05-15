@@ -1,11 +1,15 @@
 import { defineConfig } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 
-// GitHub project pages: https://<user>.github.io/<repo>/
+// GitHub Pages:
+// - Project site: https://<user>.github.io/<repo>/  → base `/<repo>/`
+// - User/org site: https://<user>.github.io/       → repo name ends with .github.io → base `/`
 const repo = process.env.GITHUB_REPOSITORY?.split('/')[1] ?? ''
+const githubBase =
+  repo.endsWith('.github.io') ? '/' : repo ? `/${repo}/` : '/'
 const base =
   process.env.VITE_BASE_PATH ||
-  (process.env.GITHUB_PAGES === 'true' && repo ? `/${repo}/` : '/')
+  (process.env.GITHUB_PAGES === 'true' ? githubBase : '/')
 
 // Public deploys: pass --demo via run-vite.mjs or set VITE_DEMO_BUILD=1 → synthetic JSON only (safe to git).
 const useDemo = process.env.VITE_DEMO_BUILD === '1'

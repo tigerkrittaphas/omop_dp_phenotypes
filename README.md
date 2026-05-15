@@ -57,20 +57,33 @@ CI may set **`VITE_DEMO_BUILD=1`** instead of `--demo`.
 npm run preview
 ```
 
-### Project Pages base path
+See **GitHub Pages deployment** below for how **`base`** is set on `*.github.io` (project vs user site).
 
-`vite.config.js` sets `base` to `/<repository>/` when `GITHUB_PAGES=true` (set in the deploy workflow). Locally, `base` defaults to `/`. Override manually:
+## GitHub Pages deployment
+
+The site must be published from the **built** Vite output (`app/dist`), not from the repo root. If your Pages URL shows the **README** or a Jekyll page, the source is almost certainly set to **“Deploy from a branch”** on `/ (root)` instead of **GitHub Actions**.
+
+### One-time setup
+
+1. Open the repo on GitHub → **Settings** → **Pages** (under “Code and automation”).
+2. Under **Build and deployment → Source**, choose **GitHub Actions** (not “Deploy from a branch”).
+3. If you previously used a branch, pick **None** or switch to Actions until only the workflow deploys the site.
+4. Push to `main` / `master` or run **Actions** → **Deploy GitHub Pages** → **Run workflow**.
+5. After a green run, open the site at **`https://<owner>.github.io/<repository>/`** (project site) or **`https://<owner>.github.io/`** if the repository is **`<owner>.github.io`** (user site).
+
+The workflow in `.github/workflows/deploy-pages.yml` runs **`npm ci`** and **`npm run build -- --demo`** in **`app/`**, then uploads **`app/dist`** as the Pages artifact.
+
+`vite.config.js` sets the asset **`base`**: **`/<repository>/`** for normal project repos, **`/`** when the repo name ends with **`.github.io`** (user/org site). Locally, `base` defaults to `/`. Override in CI or locally:
 
 ```bash
 VITE_BASE_PATH=/my-repo/ npm run build
 ```
 
-## GitHub Pages deployment
+### Checklist if the app is blank or 404
 
-1. In repo **Settings → Pages**, set **Build and deployment → Source** to **GitHub Actions**.
-2. Push to `main` or `master`, or run **Actions → Deploy GitHub Pages → Run workflow**.
-
-The workflow runs **`npm run build -- --demo`** so the published site never embeds the real JSON filename for local-only data.
+- **Source** is **GitHub Actions** and a **Deploy GitHub Pages** workflow run completed successfully.
+- You are using the **Pages** URL (`*.github.io`), not the normal repo file browser (`github.com/...`).
+- For a **project** repo, paths are under `/<repository>/`; the workflow sets `GITHUB_PAGES=true` so Vite uses the correct `base` (and `/<owner>.github.io/` repos use base `/`).
 
 ## Real differential privacy pipeline (Python + optional R)
 
