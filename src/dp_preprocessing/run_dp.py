@@ -1,5 +1,5 @@
-from phenotypes import load_phenotypes
-from phenotype_queries import fetch_all_phenotype_counts, get_max_patient_phenotype_overlap
+from .phenotypes import load_phenotypes
+from .phenotype_queries import fetch_all_phenotype_counts, get_max_patient_phenotype_overlap
 
 import opendp.prelude as dp
 dp.enable_features("contrib")

@@ -44,8 +44,8 @@
   const CENTER_STRENGTH = 0.05
   const COLLISION_PADDING = 3
   const COLLISION_STRENGTH = 0.9
-  const HOVER_REPEL_RADIUS = 30
-  const HOVER_REPEL_STRENGTH = 10.0
+  const HOVER_REPEL_RADIUS = 0
+  const HOVER_REPEL_STRENGTH = 0.0
   const CLUSTER_STRENGTH = 0.2
   const CLUSTER_REPEL_BASE = 5000
 
@@ -73,9 +73,9 @@
     return SYSTEM_COLORS[system] ?? SYSTEM_COLORS['Other']
   }
 
-  function selectedFillColor() {
+  function selectedStrokeColor() {
     const theme = document.documentElement.getAttribute('data-theme')
-    return theme === 'dark' ? '#ffffff' : '#000000'
+    return theme === 'dark' ? '#ffffff' : '#eab308'
   }
 
   function clampTableWidth(value) {
@@ -169,11 +169,8 @@
       await tick()
       drawGraph(nodes, links)
 
-      // Keep selected node color in sync when the global theme changes.
       themeObserver?.disconnect()
-      themeObserver = new MutationObserver(() => {
-        applySelection(hoveredId)
-      })
+      themeObserver = new MutationObserver(() => applySelection(hoveredId))
       themeObserver.observe(document.documentElement, {
         attributes: true,
         attributeFilter: ['data-theme'],
@@ -271,11 +268,9 @@
       nodeEl
         .transition().duration(150)
         .attr('r', d => d.id === sid ? rScale(d.count) * NODE_HIGHLIGHT_SCALE : rScale(d.count))
-        .attr('fill', d => d.id === sid ? selectedFillColor() : d.color)
-        .attr('stroke', d => d.id === sid
-          ? d3.color(d.color).brighter(0.5)
-          : d3.color(d.color).darker(0.8))
-        .attr('stroke-width', d => d.id === sid ? 2.5 : 0.8)
+        .attr('fill', d => d.color)
+        .attr('stroke', d => d.id === sid ? selectedStrokeColor() : d3.color(d.color).darker(0.8))
+        .attr('stroke-width', d => d.id === sid ? 3 : 0.8)
       // reheat simulation so collision force recalculates with updated radius
       simulation.alpha(0.3).restart()
     }

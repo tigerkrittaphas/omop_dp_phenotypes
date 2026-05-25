@@ -2,9 +2,16 @@
   let { data, hoveredId = $bindable(null), sortBy = $bindable('count'), height = 900 } = $props()
 
   let containerEl = $state()
+  let searchQuery = $state('')
+
+  const filteredData = $derived(
+    searchQuery.trim() === ''
+      ? data
+      : data.filter(d => d.name.toLowerCase().includes(searchQuery.trim().toLowerCase()))
+  )
 
   const sortedData = $derived(
-    [...data].sort((a, b) => {
+    [...filteredData].sort((a, b) => {
       if (sortBy === 'count')  return b.count - a.count
       if (sortBy === 'id')     return a.id - b.id
       if (sortBy === 'system') return a.system.localeCompare(b.system) || b.count - a.count
@@ -28,6 +35,16 @@
 
 <div class="panel" style="height:{height}px">
   <div class="toolbar">
+    <input
+      class="search-input"
+      type="search"
+      placeholder="Search cohort name…"
+      bind:value={searchQuery}
+      aria-label="Search cohort name"
+    />
+  </div>
+
+  <div class="toolbar sort-toolbar">
     <span class="sort-label">Sort by</span>
     {#each [['count', 'Count'], ['id', 'Cohort ID'], ['system', 'Classification']] as [key, label]}
       <button class="sort-btn" class:active={sortBy === key} onclick={() => sortBy = key}>
@@ -86,6 +103,25 @@
     border-bottom: 1px solid var(--border-strong);
     flex-shrink: 0;
   }
+
+  .sort-toolbar {
+    border-top: none;
+  }
+
+  .search-input {
+    flex: 1;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    background: var(--surface-panel);
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .search-input::placeholder { color: var(--text-muted); }
+  .search-input:focus { border-color: var(--accent); }
 
   .sort-label {
     font-size: 0.7rem;

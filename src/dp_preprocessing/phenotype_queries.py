@@ -5,7 +5,7 @@ from __future__ import annotations
 import duckdb
 import pandas as pd
 
-from phenotypes import PHENOTYPES, Phenotype
+from .phenotypes import PHENOTYPES, Phenotype
 
 
 def _build_union_sql(phenotypes: list[Phenotype]) -> str:

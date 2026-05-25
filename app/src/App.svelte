@@ -40,6 +40,20 @@
 
 <NetworkGraph />
 
+<footer class="page-footer">
+  <p class="description">
+    A visualization of <strong>856 clinical phenotypes</strong> from the OHDSI Phenotype Library.
+    Nodes represent patient cohorts; edges connect phenotypes that share OMOP concept IDs.
+    Patient counts are protected with <strong>differential privacy</strong>
+    applied to counts derived from the OMOP CDM Database.
+  </p>
+  <p class="sources">
+    Phenotype definitions:
+    <a href="https://phenotypelibrary.ohdsi.org" target="_blank" rel="noopener">OHDSI Phenotype Library</a>
+    · Privacy: <a href="https://opendp.org" target="_blank" rel="noopener">OpenDP</a>
+  </p>
+</footer>
+
 <style>
   .topbar {
     display: flex;
@@ -70,4 +84,31 @@
   }
 
   .theme-toggle svg { display: block; }
+
+  .page-footer {
+    margin-top: 2rem;
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid var(--border-strong);
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .page-footer p {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .description strong { color: var(--text-primary); font-weight: 600; }
+
+  .sources { color: var(--text-muted); }
+
+  .page-footer a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .page-footer a:hover { text-decoration: underline; }
 </style>
