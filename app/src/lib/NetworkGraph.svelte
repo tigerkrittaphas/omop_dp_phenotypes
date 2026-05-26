@@ -30,8 +30,8 @@
 
   const WIDTH = 700
   const HEIGHT = 700
-  const MIN_RADIUS = 8
-  const MAX_RADIUS = 15
+  const MIN_RADIUS = 5
+  const MAX_RADIUS = 12
   const MAX_NODES = 500
   const TABLE_MIN_WIDTH = 420
   const TABLE_MAX_WIDTH = 900
