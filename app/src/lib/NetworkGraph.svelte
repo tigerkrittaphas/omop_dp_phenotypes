@@ -30,14 +30,14 @@
 
   const WIDTH = 700
   const HEIGHT = 700
-  const MIN_RADIUS = 2
-  const MAX_RADIUS = 12
+  const MIN_RADIUS = 8
+  const MAX_RADIUS = 15
   const MAX_NODES = 500
   const TABLE_MIN_WIDTH = 420
   const TABLE_MAX_WIDTH = 900
 
   // Force layout tuning knobs (grouped for easier adjustment)
-  const NODE_HIGHLIGHT_SCALE = 1.6
+  const NODE_HIGHLIGHT_SCALE = 1.5
   const LINK_DISTANCE = 60
   const LINK_STRENGTH = 0.8
   const CHARGE_STRENGTH = -10
@@ -188,8 +188,9 @@
   })
 
   function drawGraph(nodes, links) {
-    const countExtent = d3.extent(nodes, d => d.count)
-    const rScale = d3.scaleSqrt().domain(countExtent).range([MIN_RADIUS, MAX_RADIUS])
+    const sortedCounts = nodes.map(n => n.count).sort(d3.ascending)
+    const countMax = d3.quantile(sortedCounts, 0.99) ?? sortedCounts[sortedCounts.length - 1]
+    const rScale = d3.scaleSqrt().domain([0, countMax]).range([MIN_RADIUS, MAX_RADIUS]).clamp(true)
 
     const weightExtent = d3.extent(links, d => d.weight)
     const strokeScale = d3.scaleLinear().domain(weightExtent).range([1.5, 4])

@@ -139,6 +139,41 @@ def main():
 
     dp_df.to_json(dp_count_output_path, orient="records")
 
+    # Write run summary
+    from datetime import datetime
+
+    summary_path = output_dir / f"dp_run_summary_{dp_mode}_eps{epsilon}_delta{delta}.txt"
+    with open(summary_path, "w") as f:
+        f.write("=== Differential Privacy Run Summary ===\n")
+        f.write(f"Timestamp:           {datetime.now().isoformat()}\n\n")
+        f.write("--- Parameters ---\n")
+        f.write(f"DP mode:             {dp_mode}\n")
+        f.write(f"Epsilon (ε):         {epsilon}\n")
+        f.write(f"Delta (δ):           {delta}\n")
+        if con is not None:
+            from math import sqrt, log
+            max_overlap = get_max_patient_phenotype_overlap(con, phenotypes)
+            l2_sens = sqrt(max_overlap)
+            noise_scale = l2_sens * sqrt(2 * log(1.25 / delta)) / epsilon
+            f.write(f"Max patient overlap: {max_overlap}\n")
+            f.write(f"L2 sensitivity:      {l2_sens:.4f}\n")
+            f.write(f"Noise scale (σ):     {noise_scale:.4f}\n")
+        f.write(f"Phenotypes loaded:   {len(phenotypes)}\n\n")
+        f.write("--- Results ---\n")
+        result_df = pd.read_csv(result_output_path)
+        f.write(f"Total phenotypes:    {len(result_df)}\n")
+        f.write(f"Total true count:    {result_df['patient_count'].sum()}\n")
+        f.write(f"Total DP count:      {result_df['dp_count'].sum()}\n")
+        f.write(f"Mean noise added:    {result_df['noise_added'].mean():.2f}\n")
+        f.write(f"Std noise added:     {result_df['noise_added'].std():.2f}\n\n")
+        f.write("--- Top 10 phenotypes by DP count ---\n")
+        top10 = result_df.nlargest(10, "dp_count")[["phenotype_name", "patient_count", "dp_count", "noise_added"]]
+        f.write(top10.to_string(index=False))
+        f.write("\n\n--- Output Files ---\n")
+        f.write(f"DP counts CSV:       {result_output_path}\n")
+        f.write(f"Dashboard JSON:      {dp_count_output_path}\n")
+    print(f"Saved run summary to: {summary_path}")
+
 if __name__ == "__main__":
     main()
 
