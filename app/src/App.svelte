@@ -71,7 +71,7 @@
 
 <footer class="page-footer">
   <p class="description">
-    A visualization of <strong>856 clinical phenotypes</strong> from the OHDSI Phenotype Library.
+    A visualization of <strong>clinical phenotypes</strong> from the OHDSI Phenotype Library.
     Nodes represent patient cohorts; edges connect phenotypes that share OMOP concept IDs.
     Patient counts and pairwise overlaps are protected with <strong>differential privacy</strong>
     using <strong>Liquid Legions</strong> sketches — once a sketch is published at ε-DP,
