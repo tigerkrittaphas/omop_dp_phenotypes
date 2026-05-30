@@ -1,8 +1,16 @@
 <script>
   import { onMount } from 'svelte'
   import NetworkGraph from "./lib/NetworkGraph.svelte";
+  import OverlapTab from "./lib/OverlapTab.svelte";
 
   let theme = $state('light')
+  /** @type {'network' | 'overlap'} */
+  let activeTab = $state('network')
+  let overlapMounted = $state(false)
+
+  // Lazy-mount the overlap tab on first visit, then keep it in the DOM
+  // (toggled via display:none) so its sketch bundle isn't re-fetched.
+  $effect(() => { if (activeTab === 'overlap') overlapMounted = true })
 
   onMount(() => {
     const saved = localStorage.getItem('theme')
@@ -38,19 +46,42 @@
   </button>
 </header>
 
-<NetworkGraph />
+<nav class="tabs" role="tablist">
+  <button role="tab" aria-selected={activeTab === 'network'}
+          class:active={activeTab === 'network'}
+          onclick={() => activeTab = 'network'}>
+    Cohort Count and Definition
+  </button>
+  <button role="tab" aria-selected={activeTab === 'overlap'}
+          class:active={activeTab === 'overlap'}
+          onclick={() => activeTab = 'overlap'}>
+    Cohort Intersection
+  </button>
+</nav>
+
+<div class="tab-pane" class:hidden={activeTab !== 'network'}>
+  <NetworkGraph />
+</div>
+
+{#if overlapMounted}
+  <div class="tab-pane" class:hidden={activeTab !== 'overlap'}>
+    <OverlapTab />
+  </div>
+{/if}
 
 <footer class="page-footer">
   <p class="description">
     A visualization of <strong>856 clinical phenotypes</strong> from the OHDSI Phenotype Library.
     Nodes represent patient cohorts; edges connect phenotypes that share OMOP concept IDs.
-    Patient counts are protected with <strong>differential privacy</strong>
-    applied to counts derived from the OMOP CDM Database.
+    Patient counts and pairwise overlaps are protected with <strong>differential privacy</strong>
+    using <strong>Liquid Legions</strong> sketches — once a sketch is published at ε-DP,
+    any cardinality or overlap is post-processing and costs no additional privacy budget.
   </p>
   <p class="sources">
     Phenotype definitions:
     <a href="https://phenotypelibrary.ohdsi.org" target="_blank" rel="noopener">OHDSI Phenotype Library</a>
-    · Privacy: <a href="https://opendp.org" target="_blank" rel="noopener">OpenDP</a>
+    · Sketch:
+    <a href="https://research.google/pubs/pub49177/" target="_blank" rel="noopener">Wright et al., Liquid Legions</a>
   </p>
 </footer>
 
@@ -84,6 +115,31 @@
   }
 
   .theme-toggle svg { display: block; }
+
+  .tabs {
+    display: flex;
+    gap: 0.25rem;
+    margin: 0.75rem 0 0.85rem;
+    border-bottom: 1px solid var(--border-strong);
+  }
+  .tabs button {
+    padding: 0.5rem 1rem;
+    border: 0;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.12s, border-color 0.12s;
+  }
+  .tabs button:hover { color: var(--text-primary); }
+  .tabs button.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .tab-pane.hidden { display: none; }
 
   .page-footer {
     margin-top: 2rem;

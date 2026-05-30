@@ -5,10 +5,13 @@ __pycache__/
 *.py[cod]
 .env
 *.json
+*.bin
 !pyproject.toml
 !app/package.json
 !app/package-lock.json
 !app/public/phenotype_counts_dp_demo.json
+!app/public/ll_sketches_demo.json
+!app/public/ll_sketches_demo.bin
 .streamlit/secrets.toml
 dist/
 *.egg-info/
